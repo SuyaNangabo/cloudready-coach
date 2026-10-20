@@ -49,5 +49,5 @@ export function weakestTopic(topics: TopicStats[]): TopicStats | null {
   if (scored.length > 0) {
     return scored.reduce((a, b) => (a.accuracy <= b.accuracy ? a : b)).t;
   }
-  return [...topics].sort((a, b) => a.attempts - b.attempts)[0];
+  return [...topics].sort((a, b) => a.attempts - b.attempts)[0] ?? null;
 }
