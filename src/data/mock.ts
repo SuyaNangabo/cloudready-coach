@@ -1,3 +1,4 @@
+import type { TopicStats } from "@/lib/scoring";
 import type { Question, Topic } from "@/types";
 
 export const topics: Topic[] = [
@@ -30,6 +31,24 @@ export const topics: Topic[] = [
 /** Simulates a network fetch so loading states can be seen. */
 export function fetchTopics(delayMs = 600): Promise<Topic[]> {
   return new Promise((resolve) => setTimeout(() => resolve(topics), delayMs));
+}
+
+/** Mock per-topic study stats for the dashboard. Weights are the numeric midpoints of each exam weight range. */
+export const topicStats: TopicStats[] = [
+  { topicId: "cloud-concepts", correct: 30, attempts: 38, weight: 27.5 },
+  { topicId: "architecture-services", correct: 11, attempts: 21, weight: 37.5 },
+  { topicId: "management-governance", correct: 1, attempts: 3, weight: 32.5 },
+];
+
+/** Stats with no attempts at all — used to preview the empty state. */
+export const emptyTopicStats: TopicStats[] = [
+  { topicId: "cloud-concepts", correct: 0, attempts: 0, weight: 27.5 },
+  { topicId: "architecture-services", correct: 0, attempts: 0, weight: 37.5 },
+  { topicId: "management-governance", correct: 0, attempts: 0, weight: 32.5 },
+];
+
+export function fetchTopicStats(delayMs = 600): Promise<TopicStats[]> {
+  return new Promise((resolve) => setTimeout(() => resolve(topicStats), delayMs));
 }
 
 export const questions: Question[] = [
