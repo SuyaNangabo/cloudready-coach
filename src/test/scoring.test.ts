@@ -23,8 +23,8 @@ describe("readinessScore", () => {
       { topicId: "architecture-services", correct: 11, attempts: 21, weight: 37.5 },
       { topicId: "management-governance", correct: 1, attempts: 3, weight: 32.5 },
     ]);
-    // (27.5*79 + 37.5*52) / 65 = 63.5… → 64
-    expect(score).toBe(64);
+    // (27.5*79 + 37.5*52) / 65 = 63.4… → 63
+    expect(score).toBe(63);
   });
 
   it("returns null when no topic has enough attempts", () => {
