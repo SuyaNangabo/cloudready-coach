@@ -9,3 +9,17 @@ export interface Topic {
   /** Approximate share of the exam, e.g. "25–30%" */
   examWeight: string;
 }
+
+export type Difficulty = "easy" | "medium" | "hard";
+
+export interface Question {
+  id: string;
+  topicSlug: TopicId;
+  question: string;
+  options: [string, string, string, string];
+  correctIndex: number;
+  explanation: string;
+  /** Why each option is right or wrong, aligned with `options`. */
+  optionExplanations: [string, string, string, string];
+  difficulty: Difficulty;
+}
