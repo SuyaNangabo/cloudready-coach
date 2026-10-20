@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { CheckCircle2, Flame, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle2, ChevronDown, Flame, ListChecks, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Confetti } from "@/components/Confetti";
@@ -20,6 +20,34 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const LETTERS = ["A", "B", "C", "D"] as const;
+
+/** Collapsible "Key points" cheat sheet shown in the feedback panel. */
+function KeyPoints({ points }: { points: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-4 rounded-xl border bg-background/60">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold"
+      >
+        <ListChecks className="h-4 w-4 text-highlight" /> Key points
+        <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <ul className="space-y-1.5 px-4 pb-4 text-sm leading-relaxed">
+          {points.map((point) => (
+            <li key={point} className="flex gap-2">
+              <span aria-hidden className="mt-0.5 shrink-0 text-highlight">•</span>
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function QuizPage() {
   const navigate = useNavigate();
@@ -117,6 +145,7 @@ function QuizPage() {
             {isCorrect ? "Correct!" : "Not quite"}
           </p>
           <p className="mt-2 text-sm leading-relaxed">{current.explanation}</p>
+          <KeyPoints points={current.keyPoints} />
           <ul className="mt-4 space-y-2">
             {current.options.map((option, i) => {
               if (i === current.correctIndex) return null;
