@@ -21,5 +21,7 @@ export interface Question {
   explanation: string;
   /** Why each option is right or wrong, aligned with `options`. */
   optionExplanations: [string, string, string, string];
+  /** Short revision bullets for the cheat sheet and quiz feedback. */
+  keyPoints: string[];
   difficulty: Difficulty;
 }

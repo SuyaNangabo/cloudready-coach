@@ -71,6 +71,12 @@ export const questions: Question[] = [
       "Correct — SaaS is finished software you use directly, like Microsoft 365 or Gmail.",
       "FaaS (serverless) runs small pieces of your own code on demand — it is not a ready-made application.",
     ],
+    keyPoints: [
+      "SaaS = finished software you use over the internet (e.g. Microsoft 365).",
+      "With SaaS the provider manages everything — servers, updates and the app.",
+      "IaaS: you manage the OS and apps. PaaS: you manage only your code.",
+      "FaaS/serverless runs small pieces of your code on demand — not a ready-made app.",
+    ],
     difficulty: "easy",
   },
   {
@@ -91,6 +97,12 @@ export const questions: Question[] = [
       "Correct — CapEx is upfront spending on owned equipment; OpEx is ongoing pay-as-you-go spending.",
       "Both models can cover hardware or software; the difference is when and how you pay, not what you buy.",
       "They are distinct models: one is upfront ownership, the other is ongoing consumption-based payment.",
+    ],
+    keyPoints: [
+      "CapEx = large upfront spend on equipment you own.",
+      "OpEx = pay-as-you-go spending — this is how the cloud works.",
+      "Cloud shifts costs from CapEx to OpEx, lowering the entry cost.",
+      "Same hardware or software either way — only when and how you pay differs.",
     ],
     difficulty: "medium",
   },
@@ -113,6 +125,12 @@ export const questions: Question[] = [
       "Billing is handled by subscriptions, not regions.",
       "That describes a resource group, which organises resources logically.",
     ],
+    keyPoints: [
+      "A region = a geographic area with one or more connected data centres.",
+      "Choose regions near your users for lower latency.",
+      "Regions help meet data-residency and compliance rules.",
+      "Resource group = logical folder. Subscription = billing boundary.",
+    ],
     difficulty: "easy",
   },
   {
@@ -133,6 +151,11 @@ export const questions: Question[] = [
       "Correct — Entra ID is Azure's identity and access management service.",
       "Virtual Network connects resources privately; it handles networking, not user sign-in.",
       "Azure Monitor collects logs and metrics about your resources — it watches, it doesn't authenticate.",
+    ],
+    keyPoints: [
+      "Microsoft Entra ID = Azure's identity and access service (formerly Azure AD).",
+      "Handles sign-in, single sign-on, MFA and access control.",
+      "It doesn't store files, route networks or collect logs — other services do that.",
     ],
     difficulty: "medium",
   },
@@ -155,6 +178,12 @@ export const questions: Question[] = [
       "Azure Policy enforces rules on resources (like allowed regions), not cost estimates.",
       "Defender for Cloud is a security tool; it assesses threats, not prices.",
     ],
+    keyPoints: [
+      "Pricing calculator = free tool to estimate costs before you deploy anything.",
+      "Azure Advisor improves resources you already run.",
+      "Azure Policy enforces rules; Defender for Cloud handles security.",
+      "Estimate first, deploy second — plan your budget with confidence.",
+    ],
     difficulty: "easy",
   },
   {
@@ -175,6 +204,11 @@ export const questions: Question[] = [
       "Correct — Azure Policy enforces governance rules and audits compliance across resources.",
       "Backups are handled by Azure Backup; Policy can require backups but doesn't perform them.",
       "Policy governs configuration and compliance — it has no effect on network speed.",
+    ],
+    keyPoints: [
+      "Azure Policy enforces rules on resources, e.g. allowed regions or required tags.",
+      "It audits compliance automatically across your environment.",
+      "It doesn't do backups, virus detection or networking — that's other services.",
     ],
     difficulty: "medium",
   },
