@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,25 +7,59 @@ interface AuthState {
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthState>({ session: null, loading: true });
+// One shared store, so every page sees the same sign-in status.
+let state: AuthState = { session: null, loading: true };
+const serverState: AuthState = { session: null, loading: true };
+const listeners = new Set<() => void>();
+let started = false;
 
-export function AuthProvider({ children, onChange }: { children: ReactNode; onChange?: (event: string) => void }) {
-  const [state, setState] = useState<AuthState>({ session: null, loading: true });
+function setState(next: AuthState) {
+  state = next;
+  listeners.forEach((listener) => listener());
+}
 
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      setState({ session, loading: false });
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") onChange?.(event);
-    });
-    void supabase.auth.getSession().then(({ data: d }) => setState({ session: d.session, loading: false }));
-    return () => data.subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+function startListening() {
+  if (started || typeof window === "undefined") return;
+  started = true;
+  supabase.auth.onAuthStateChange((_event, session) => {
+    setState({ session, loading: false });
+  });
+  void supabase.auth.getSession().then(({ data }) => {
+    setState({ session: data.session, loading: false });
+  });
+}
 
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Kept so older imports still work. It no longer needs to be used anywhere. */
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+  onChange?: (event: string) => void;
+}) {
+  return <>{children}</>;
 }
 
 export function useAuth() {
-  const { session, loading } = useContext(AuthContext);
-  return { session, user: session?.user ?? null, loading };
+  const snapshot = useSyncExternalStore(
+    subscribe,
+    () => state,
+    () => serverState,
+  );
+
+  useEffect(() => {
+    startListening();
+  }, []);
+
+  return {
+    session: snapshot.session,
+    user: snapshot.session?.user ?? null,
+    loading: snapshot.loading,
+  };
 }

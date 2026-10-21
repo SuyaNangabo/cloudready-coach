@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from "react";
-import { toast } from "sonner";
-import { fetchQuestions, saveAttempt } from "@/lib/api";
+import { useEffect, useSyncExternalStore } from "react";
+import { questions as mockQuestions } from "@/data/mock";
+import { supabase } from "@/integrations/supabase/client";
 import type { Question, TopicId } from "@/types";
 
 export type TopicChoice = TopicId | "all";
@@ -18,6 +18,9 @@ interface QuizState {
   /** Consecutive correct answers across the whole session. */
   streak: number;
   started: boolean;
+  /** Questions loaded from Supabase (empty until loaded). */
+  bank: Question[];
+  bankStatus: "idle" | "loading" | "ready" | "error";
 }
 
 const initialState: QuizState = {
@@ -26,6 +29,8 @@ const initialState: QuizState = {
   answers: [],
   streak: 0,
   started: false,
+  bank: [],
+  bankStatus: "idle",
 };
 
 // Module-level store so quiz state survives navigation between /quiz and /results.
@@ -42,25 +47,101 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-/** Fisher–Yates shuffle of question order (option order is never changed). */
-export function shuffle<T>(items: T[]): T[] {
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = out[i]!;
-    out[i] = out[j]!;
-    out[j] = tmp;
-  }
-  return out;
+// ---------- Loading questions from Supabase ----------
+
+interface QuestionRow {
+  id: string;
+  question: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+  option_explanations: string[] | null;
+  key_points: string[] | null;
+  difficulty: string | null;
+  topics: { slug: string } | { slug: string }[] | null;
 }
 
-async function pickQuestions(topic: TopicChoice, count: number): Promise<Question[]> {
-  const pool = await fetchQuestions(topic === "all" ? undefined : topic);
+function toQuestion(row: QuestionRow): Question {
+  const topic = Array.isArray(row.topics) ? row.topics[0] : row.topics;
+  const topicSlug = (topic?.slug ?? "") as TopicId;
+  return {
+    id: row.id,
+    topicSlug,
+    question: row.question,
+    options: row.options as Question["options"],
+    correctIndex: row.correct_index,
+    explanation: row.explanation,
+    optionExplanations: (row.option_explanations ?? []) as Question["optionExplanations"],
+    keyPoints: row.key_points ?? [],
+    difficulty: (row.difficulty ?? "medium") as Question["difficulty"],
+  };
+}
+
+let loadPromise: Promise<void> | null = null;
+
+/** Loads all questions once and keeps them in memory. */
+export function loadQuestionBank(): Promise<void> {
+  if (state.bankStatus === "ready") return Promise.resolve();
+  if (loadPromise) return loadPromise;
+  setState({ bankStatus: "loading" });
+  loadPromise = (async () => {
+    const { data, error } = await supabase
+      .from("questions")
+      .select(
+        "id, question, options, correct_index, explanation, option_explanations, key_points, difficulty, topics(slug)",
+      );
+    if (error || !data || data.length === 0) {
+      console.error("Could not load questions from Supabase", error);
+      setState({ bankStatus: "error" });
+      loadPromise = null;
+      return;
+    }
+    setState({ bank: (data as unknown as QuestionRow[]).map(toQuestion), bankStatus: "ready" });
+  })();
+  return loadPromise;
+}
+
+// ---------- Saving answers ----------
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function saveAttempt(questionId: string, selectedIndex: number, isCorrect: boolean) {
+  if (!UUID.test(questionId)) return; // mock questions are not in the database
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return; // only signed-in users have their answers saved
+  const { error } = await supabase
+    .from("attempts")
+    .insert({ question_id: questionId, selected_index: selectedIndex, is_correct: isCorrect });
+  if (error) console.error("Could not save answer", error);
+}
+
+// ---------- Quiz logic ----------
+
+function shuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function pickQuestions(topic: TopicChoice, count: number): Question[] {
+  const source = state.bank.length > 0 ? state.bank : mockQuestions;
+  const pool = topic === "all" ? source : source.filter((q) => q.topicSlug === topic);
   return shuffle(pool).slice(0, count);
 }
 
 export function useQuiz() {
-  const snapshot = useSyncExternalStore(subscribe, () => state, () => state);
+  const snapshot = useSyncExternalStore(
+    subscribe,
+    () => state,
+    () => state,
+  );
+
+  useEffect(() => {
+    void loadQuestionBank();
+  }, []);
 
   const current = snapshot.questions[snapshot.currentIndex] ?? null;
   const currentAnswer = snapshot.answers[snapshot.currentIndex] ?? null;
@@ -76,17 +157,14 @@ export function useQuiz() {
     total: snapshot.questions.length,
     showStreakBadge: snapshot.streak >= 5,
 
-    /** Loads random questions from the database. Returns how many were loaded. */
-    async start(topic: TopicChoice, count: number): Promise<number> {
-      const questions = await pickQuestions(topic, count);
-      if (questions.length === 0) return 0;
+    start(topic: TopicChoice, count: number) {
+      const questions = pickQuestions(topic, count);
       setState({
         questions,
         currentIndex: 0,
         answers: questions.map((question) => ({ question, picked: null })),
         started: true,
       });
-      return questions.length;
     },
 
     answer(optionIndex: number) {
@@ -97,9 +175,7 @@ export function useQuiz() {
       const nextAnswers = [...answers];
       nextAnswers[currentIndex] = { ...existing, picked: optionIndex };
       setState({ answers: nextAnswers, streak: correct ? streak + 1 : 0 });
-      saveAttempt(existing.question.id, optionIndex, correct).catch(() => {
-        toast.error("We couldn't save that answer. Your quiz will carry on.");
-      });
+      void saveAttempt(existing.question.id, optionIndex, correct);
     },
 
     next() {
@@ -121,7 +197,7 @@ export function useQuiz() {
     },
 
     reset() {
-      setState({ ...initialState, streak: state.streak });
+      setState({ questions: [], currentIndex: 0, answers: [], started: false });
     },
   };
 }

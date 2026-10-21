@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CheatsheetRouteImport } from './routes/cheatsheet'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheatsheetRoute = CheatsheetRouteImport.update({
@@ -54,6 +60,7 @@ const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/cheatsheet': typeof CheatsheetRoute
   '/practice': typeof PracticeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/cheatsheet': typeof CheatsheetRoute
   '/practice': typeof PracticeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -72,6 +80,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/cheatsheet': typeof CheatsheetRoute
   '/practice': typeof PracticeRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -81,13 +90,27 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/cheatsheet' | '/practice' | '/dashboard' | '/quiz' | '/results'
+    | '/'
+    | '/auth'
+    | '/cheatsheet'
+    | '/practice'
+    | '/dashboard'
+    | '/quiz'
+    | '/results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cheatsheet' | '/practice' | '/dashboard' | '/quiz' | '/results'
+  to:
+    | '/'
+    | '/auth'
+    | '/cheatsheet'
+    | '/practice'
+    | '/dashboard'
+    | '/quiz'
+    | '/results'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/auth'
     | '/cheatsheet'
     | '/practice'
     | '/_authenticated/dashboard'
@@ -98,6 +121,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   CheatsheetRoute: typeof CheatsheetRoute
   PracticeRoute: typeof PracticeRoute
 }
@@ -116,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cheatsheet': {
@@ -174,6 +205,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   CheatsheetRoute: CheatsheetRoute,
   PracticeRoute: PracticeRoute,
 }
