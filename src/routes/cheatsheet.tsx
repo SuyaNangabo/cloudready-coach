@@ -4,7 +4,9 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
-import { topics, questions } from "@/data/mock";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchQuestions, fetchTopics } from "@/lib/api";
 
 export const Route = createFileRoute("/cheatsheet")({
   head: () => ({
@@ -29,6 +31,12 @@ function CheatSheetPage() {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
 
+  const topicsQ = useQuery({ queryKey: ["topics", "list"], queryFn: () => fetchTopics() });
+  const questionsQ = useQuery({ queryKey: ["questions", "all"], queryFn: () => fetchQuestions() });
+  const topics = topicsQ.data ?? [];
+  const questions = questionsQ.data ?? [];
+  const loadingData = topicsQ.isLoading || questionsQ.isLoading;
+
   const groups = useMemo(() => {
     return topics
       .map((topic) => {
@@ -42,7 +50,7 @@ function CheatSheetPage() {
         return { topic, entries };
       })
       .filter((group) => group.entries.length > 0);
-  }, [q]);
+  }, [q, topics, questions]);
 
   const total = groups.reduce((sum, g) => sum + g.entries.length, 0);
 
@@ -65,7 +73,12 @@ function CheatSheetPage() {
         />
       </div>
 
-      {groups.length === 0 ? (
+      {loadingData ? (
+        <div className="mt-6 grid gap-4">
+          <Skeleton className="h-40 rounded-2xl" />
+          <Skeleton className="h-40 rounded-2xl" />
+        </div>
+      ) : groups.length === 0 ? (
         <div className="mt-6">
           <EmptyState
             title="No matches"

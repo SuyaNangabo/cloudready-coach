@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import { questions as allQuestions } from "@/data/mock";
+import { toast } from "sonner";
+import { fetchQuestions, saveAttempt } from "@/lib/api";
 import type { Question, TopicId } from "@/types";
 
 export type TopicChoice = TopicId | "all";
@@ -41,15 +42,19 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-function pickQuestions(topic: TopicChoice, count: number): Question[] {
-  const pool = topic === "all" ? allQuestions : allQuestions.filter((q) => q.topicSlug === topic);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  // Repeat the pool if the user asks for more questions than exist in the mock data.
-  const result: Question[] = [];
-  while (result.length < count && shuffled.length > 0) {
-    result.push(...shuffled);
+/** Fisher–Yates shuffle of question order (option order is never changed). */
+export function shuffle<T>(items: T[]): T[] {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
   }
-  return result.slice(0, count);
+  return out;
+}
+
+async function pickQuestions(topic: TopicChoice, count: number): Promise<Question[]> {
+  const pool = await fetchQuestions(topic === "all" ? undefined : topic);
+  return shuffle(pool).slice(0, count);
 }
 
 export function useQuiz() {
@@ -69,14 +74,17 @@ export function useQuiz() {
     total: snapshot.questions.length,
     showStreakBadge: snapshot.streak >= 5,
 
-    start(topic: TopicChoice, count: number) {
-      const questions = pickQuestions(topic, count);
+    /** Loads random questions from the database. Returns how many were loaded. */
+    async start(topic: TopicChoice, count: number): Promise<number> {
+      const questions = await pickQuestions(topic, count);
+      if (questions.length === 0) return 0;
       setState({
         questions,
         currentIndex: 0,
         answers: questions.map((question) => ({ question, picked: null })),
         started: true,
       });
+      return questions.length;
     },
 
     answer(optionIndex: number) {
@@ -87,6 +95,9 @@ export function useQuiz() {
       const nextAnswers = [...answers];
       nextAnswers[currentIndex] = { ...existing, picked: optionIndex };
       setState({ answers: nextAnswers, streak: correct ? streak + 1 : 0 });
+      saveAttempt(existing.question.id, optionIndex, correct).catch(() => {
+        toast.error("We couldn't save that answer. Your quiz will carry on.");
+      });
     },
 
     next() {

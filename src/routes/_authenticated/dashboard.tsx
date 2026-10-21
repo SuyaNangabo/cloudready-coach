@@ -11,7 +11,7 @@ import { fetchTopicStats, topics } from "@/data/mock";
 import { useQuiz } from "@/hooks/useQuiz";
 import { readinessLabel, readinessScore, topicAccuracy, weakestTopic, type TopicStats } from "@/lib/scoring";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — AZ-900 Prep Coach (Unofficial)" },

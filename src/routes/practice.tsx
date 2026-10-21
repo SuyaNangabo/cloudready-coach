@@ -2,7 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { BookOpen, Cloud, Layers, Server, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { topics } from "@/data/mock";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { fetchTopics } from "@/lib/api";
 import { useQuiz, type TopicChoice } from "@/hooks/useQuiz";
 import { cn } from "@/lib/utils";
 import type { TopicId } from "@/types";
@@ -21,7 +24,7 @@ export const Route = createFileRoute("/practice")({
 
 const topicIcons: Record<TopicId, typeof Cloud> = {
   "cloud-concepts": Cloud,
-  "architecture-services": Server,
+  "azure-architecture-services": Server,
   "management-governance": ShieldCheck,
 };
 
@@ -32,10 +35,20 @@ function PracticeSetup() {
   const quiz = useQuiz();
   const [topic, setTopic] = useState<TopicChoice>("all");
   const [count, setCount] = useState<number>(10);
+  const [starting, setStarting] = useState(false);
+  const { data: topics = [] } = useQuery({ queryKey: ["topics", "list"], queryFn: () => fetchTopics() });
 
-  const startQuiz = () => {
-    quiz.start(topic, count);
-    void navigate({ to: "/quiz" });
+  const startQuiz = async () => {
+    setStarting(true);
+    try {
+      const n = await quiz.start(topic, count);
+      if (n === 0) toast.error("No questions found for this topic yet.");
+      else void navigate({ to: "/quiz" });
+    } catch {
+      toast.error("We couldn't load questions. Check your connection and try again.");
+    } finally {
+      setStarting(false);
+    }
   };
 
   return (
@@ -86,8 +99,8 @@ function PracticeSetup() {
         ))}
       </div>
 
-      <Button size="lg" className="mt-8 w-full rounded-full sm:w-auto" onClick={startQuiz}>
-        Start quiz
+      <Button size="lg" className="mt-8 w-full rounded-full sm:w-auto" onClick={() => void startQuiz()} disabled={starting}>
+        {starting && <Loader2 className="h-4 w-4 animate-spin" />} Start quiz
       </Button>
     </section>
   );

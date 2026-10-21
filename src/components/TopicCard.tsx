@@ -6,13 +6,20 @@ import type { Topic, TopicId } from "@/types";
 
 const icons: Record<TopicId, typeof Cloud> = {
   "cloud-concepts": Cloud,
-  "architecture-services": Server,
+  "azure-architecture-services": Server,
   "management-governance": ShieldCheck,
 };
 
 export function TopicCard({ topic }: { topic: Topic }) {
   const Icon = icons[topic.id] ?? BookOpen;
-  const pct = percent(topic.answeredCount, topic.questionCount);
+  // Signed-in users see their real accuracy; otherwise the bar shows nothing yet.
+  const signedIn = topic.accuracy !== undefined;
+  const pct = signedIn ? (topic.accuracy ?? 0) : percent(topic.answeredCount, topic.questionCount);
+  const label = !signedIn
+    ? pct === 0 ? "Not started" : `${pct}% done`
+    : topic.accuracy === null
+      ? topic.answeredCount === 0 ? "Not started" : `${topic.answeredCount} answered`
+      : `${topic.accuracy}% accuracy`;
   return (
     <article className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-soft">
       <div className="flex items-start justify-between gap-3">
@@ -26,7 +33,7 @@ export function TopicCard({ topic }: { topic: Topic }) {
       <div className="mt-auto space-y-2">
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>{topic.questionCount} questions</span>
-          <span>{pct === 0 ? "Not started" : `${pct}% done`}</span>
+          <span>{label}</span>
         </div>
         <Progress value={pct} className="h-2" />
       </div>

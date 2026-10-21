@@ -7,7 +7,7 @@ import { Confetti } from "@/components/Confetti";
 import { useQuiz } from "@/hooks/useQuiz";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/quiz")({
+export const Route = createFileRoute("/_authenticated/quiz")({
   head: () => ({
     meta: [
       { title: "Quiz — AZ-900 Prep Coach (Unofficial)" },
