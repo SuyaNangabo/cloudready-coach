@@ -15,7 +15,7 @@ export interface Topic {
   /** Exam weight as a 0–100 number, used for scoring. */
   weight: number;
   /** Signed-in user's accuracy (0–100) or null when not enough attempts / signed out. */
-  accuracy?: number | null;
+  accuracy?: number | null | undefined;
 }
 
 export type Difficulty = "easy" | "medium" | "hard";
