@@ -7,7 +7,9 @@ import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchTopicStats, topics } from "@/data/mock";
+import { toast } from "sonner";
+import { fetchTopicStats } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuiz } from "@/hooks/useQuiz";
 import { readinessLabel, readinessScore, topicAccuracy, weakestTopic, type TopicStats } from "@/lib/scoring";
 
@@ -23,14 +25,20 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const topicTitle = (id: TopicStats["topicId"]) => topics.find((t) => t.id === id)?.title ?? id;
 
 function DashboardPage() {
   const navigate = useNavigate();
   const quiz = useQuiz();
-  const { data, isLoading } = useQuery({ queryKey: ["topic-stats"], queryFn: () => fetchTopicStats() });
+  const { user } = useAuth();
+  const { data, isLoading } = useQuery({
+    queryKey: ["topic-stats", user?.id],
+    queryFn: () => fetchTopicStats(user!.id),
+    enabled: !!user,
+  });
+  const titles = new Map((data ?? []).map((s) => [s.topicId, s.title]));
+  const topicTitle = (id: TopicStats["topicId"]) => titles.get(id) ?? id;
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <section className="mx-auto max-w-5xl px-4 py-10">
         <h1 className="mb-5 text-2xl font-bold">Dashboard</h1>
