@@ -1,13 +1,21 @@
-export type TopicId = "cloud-concepts" | "architecture-services" | "management-governance";
+/** Topic slug from the "topics" table, e.g. "cloud-concepts". */
+export type TopicId = string;
 
 export interface Topic {
+  /** Topic slug (used in URLs and quiz selection). */
   id: TopicId;
+  /** Database uuid of the topic. */
+  dbId: string;
   title: string;
   description: string;
   questionCount: number;
   answeredCount: number;
-  /** Approximate share of the exam, e.g. "25–30%" */
+  /** Share of the exam, e.g. "27.5%" */
   examWeight: string;
+  /** Exam weight as a 0–100 number, used for scoring. */
+  weight: number;
+  /** Signed-in user's accuracy (0–100) or null when not enough attempts / signed out. */
+  accuracy?: number | null;
 }
 
 export type Difficulty = "easy" | "medium" | "hard";

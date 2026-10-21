@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useQuiz } from "@/hooks/useQuiz";
 import { percent } from "@/lib/progress";
 
-export const Route = createFileRoute("/results")({
+export const Route = createFileRoute("/_authenticated/results")({
   head: () => ({
     meta: [
       { title: "Results — AZ-900 Prep Coach (Unofficial)" },

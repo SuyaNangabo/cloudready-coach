@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CheatsheetRouteImport } from './routes/cheatsheet'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as PracticeRouteImport } from './routes/practice'
-import { Route as QuizRouteImport } from './routes/quiz'
-import { Route as ResultsRouteImport } from './routes/results'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedQuizRouteImport } from './routes/_authenticated/quiz'
+import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -26,23 +26,23 @@ const CheatsheetRoute = CheatsheetRouteImport.update({
   path: '/cheatsheet',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuizRoute = QuizRouteImport.update({
-  id: '/quiz',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/_authenticated/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedQuizRoute = AuthenticatedQuizRouteImport.update({
+  id: '/_authenticated/quiz',
   path: '/quiz',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
+const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
+  id: '/_authenticated/results',
   path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
@@ -50,51 +50,51 @@ const ResultsRoute = ResultsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cheatsheet': typeof CheatsheetRoute
-  '/dashboard': typeof DashboardRoute
   '/practice': typeof PracticeRoute
-  '/quiz': typeof QuizRoute
-  '/results': typeof ResultsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/quiz': typeof AuthenticatedQuizRoute
+  '/results': typeof AuthenticatedResultsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cheatsheet': typeof CheatsheetRoute
-  '/dashboard': typeof DashboardRoute
   '/practice': typeof PracticeRoute
-  '/quiz': typeof QuizRoute
-  '/results': typeof ResultsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/quiz': typeof AuthenticatedQuizRoute
+  '/results': typeof AuthenticatedResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cheatsheet': typeof CheatsheetRoute
-  '/dashboard': typeof DashboardRoute
   '/practice': typeof PracticeRoute
-  '/quiz': typeof QuizRoute
-  '/results': typeof ResultsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/quiz': typeof AuthenticatedQuizRoute
+  '/_authenticated/results': typeof AuthenticatedResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/cheatsheet' | '/dashboard' | '/practice' | '/quiz' | '/results'
+    '/' | '/cheatsheet' | '/practice' | '/dashboard' | '/quiz' | '/results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cheatsheet' | '/dashboard' | '/practice' | '/quiz' | '/results'
+  to: '/' | '/cheatsheet' | '/practice' | '/dashboard' | '/quiz' | '/results'
   id:
     | '__root__'
     | '/'
     | '/cheatsheet'
-    | '/dashboard'
     | '/practice'
-    | '/quiz'
-    | '/results'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/quiz'
+    | '/_authenticated/results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheatsheetRoute: typeof CheatsheetRoute
-  DashboardRoute: typeof DashboardRoute
   PracticeRoute: typeof PracticeRoute
-  QuizRoute: typeof QuizRoute
-  ResultsRoute: typeof ResultsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedQuizRoute: typeof AuthenticatedQuizRoute
+  AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -113,13 +113,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheatsheetRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/practice': {
       id: '/practice'
       path: '/practice'
@@ -127,18 +120,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/quiz': {
-      id: '/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof QuizRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/results': {
-      id: '/results'
+    '/_authenticated/quiz': {
+      id: '/_authenticated/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof AuthenticatedQuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/results': {
+      id: '/_authenticated/results'
       path: '/results'
       fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
+      preLoaderRoute: typeof AuthenticatedResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -147,10 +147,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheatsheetRoute: CheatsheetRoute,
-  DashboardRoute: DashboardRoute,
   PracticeRoute: PracticeRoute,
-  QuizRoute: QuizRoute,
-  ResultsRoute: ResultsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedQuizRoute: AuthenticatedQuizRoute,
+  AuthenticatedResultsRoute: AuthenticatedResultsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
